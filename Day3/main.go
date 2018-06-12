@@ -2,11 +2,19 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
-func main() {
-	fmt.Println("Hello, playground")
-	printSpiral(10)
+type point struct {
+	x int
+	y int
+}
+
+func Abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }
 
 func min(a, b int) int {
@@ -16,24 +24,41 @@ func min(a, b int) int {
 	return b
 }
 
-func printSpiral(n int) {
-	for i := 0; i < n; i++ {
+func main() {
+	values := make(chan *point, 2)
+	start := time.Now().UTC()
+	find := 368078
+	// I am too lazy right now :)
+	maxMatrixSize := 200000
+	go onSpiral(0, maxMatrixSize/2, find, values)
+	go onSpiral(maxMatrixSize/2, maxMatrixSize, find, values)
 
-		for j := 0; j < n; j++ {
-			// x stores the layer in which (i, j)th
-			// element lies
-			var x int
+	one, another := <-values, <-values
+	distance := Abs(one.x-another.x) + Abs(one.y-another.y)
+	end := time.Now().UTC()
+	fmt.Printf("The Manhattan Distance is: %d \n", distance)
+	fmt.Printf("Took me %+v to find the answer.", end.Sub(start))
+}
 
-			// Finds minimum of four inputs
-			x = min(min(i, j), min(n-1-i, n-1-j))
-
-			// For upper right half
+func onSpiral(from, to int, n int, vals chan *point) {
+	for i := from; i < to; i++ {
+		for j := from; j < to; j++ {
+			x := min(min(i, j), min(n-1-i, n-1-j))
+			var val int
 			if i <= j {
-				fmt.Printf("%d\t ", (n-2*x)*(n-2*x)-(i-x)-(j-x))
+				val = (n-2*x)*(n-2*x) - (i - x) - (j - x)
 			} else {
-				fmt.Printf("%d\t ", (n-2*x-2)*(n-2*x-2)+(i-x)+(j-x))
+				val = (n-2*x-2)*(n-2*x-2) + (i - x) + (j - x)
+			}
+			if val == n {
+				vals <- &point{i, j}
+
+			}
+			if val == 1 {
+				vals <- &point{i, j}
+
 			}
 		}
-		fmt.Print("\n")
 	}
+
 }
