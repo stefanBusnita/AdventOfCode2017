@@ -63,10 +63,10 @@ func (t *Tape) start(steps int, key string) {
 		state := t.states[key]
 		currentTapeValue := t.content[cursor]
 
-		fmt.Printf("State %s, Cursor %d,current value %d, next value %d \n", key, cursor, currentTapeValue, int(writeVal))
+		//fmt.Printf("State %s, Cursor %d,current value %d, next value %d \n", key, cursor, currentTapeValue, int(writeVal))
 		newCursor, writeVal = state.config[currentTapeValue].effect(cursor)
 
-		fmt.Printf("State %s, Cursor %d,current value %d, next value %d \n \n\n\n", key, cursor, currentTapeValue, int(writeVal))
+		//fmt.Printf("State %s, Cursor %d,current value %d, next value %d \n \n\n\n", key, cursor, currentTapeValue, int(writeVal))
 		// assign new value
 		t.content[int(cursor)] = int(writeVal)
 		// get the next state key
@@ -252,8 +252,5 @@ func main() {
 
 	tape.start(12794428, "A")
 
-	// 3198607 Wrong !
-
-	// 3198607 MIGHT BE GOOD, WE CAN TRY IN ONE MINUTE
-
+	// 2832 Correct
 }
