@@ -28,22 +28,6 @@ type Effect struct {
 	effect       func(cursor int) (Cursor, WriteVal)
 }
 
-func doEffect(cursor int) (Cursor, WriteVal) {
-	return Cursor(cursor + 1), WriteVal(1)
-}
-
-func doEffect2(cursor int) (Cursor, WriteVal) {
-	return Cursor(cursor - 1), WriteVal(0)
-}
-
-func doEffect3(cursor int) (Cursor, WriteVal) {
-	return Cursor(cursor - 1), WriteVal(1)
-}
-
-func doEffect4(cursor int) (Cursor, WriteVal) {
-	return Cursor(cursor + 1), WriteVal(1)
-}
-
 type Tape struct {
 	content []int
 	states  map[string]*State
@@ -63,7 +47,7 @@ func (t *Tape) addState(key string, state *State) {
 func (t *Tape) start(steps int, startStateKey string) {
 
 	cursor := Cursor(steps * 10 / 2)
-	fmt.Printf("Cursor start value %d", cursor)
+	fmt.Printf("Cursor start value %d \n", cursor)
 
 	iterations := 0
 	var writeVal WriteVal
@@ -77,13 +61,14 @@ func (t *Tape) start(steps int, startStateKey string) {
 		startStateKey = state.config[currentTapeValue].nextStateKey
 
 		cursor, writeVal = state.config[currentTapeValue].effect(int(cursor))
-		fmt.Printf("Current cursor %d with the next value %d \n", cursor, int(writeVal))
+		//fmt.Printf("Current cursor %d with the next value %d \n", cursor, int(writeVal))
 		t.content[int(cursor)] = int(writeVal)
 
 		// just for testing, the sum of all these ones is the checksum
 		if t.content[int(cursor)] == 1 {
 			fmt.Println("One One")
 		}
+		//fmt.Printf("How does the tape look now ? %+v \n", t.content)
 
 		iterations++
 	}
@@ -91,27 +76,35 @@ func (t *Tape) start(steps int, startStateKey string) {
 }
 
 func main() {
-	tape := NewTape(200)
+	tape := NewTape(50)
 
 	// create and describe stateA
 	stateA := NewState(tape)
 	stateA.addEffect(0, &Effect{
 		nextStateKey: "B",
-		effect:       doEffect,
+		effect: func(cursor int) (Cursor, WriteVal) {
+			return Cursor(cursor + 1), WriteVal(1)
+		},
 	})
 	stateA.addEffect(1, &Effect{
 		nextStateKey: "B",
-		effect:       doEffect2,
+		effect: func(cursor int) (Cursor, WriteVal) {
+			return Cursor(cursor - 1), WriteVal(0)
+		},
 	})
 	// create and describe stateB
 	stateB := NewState(tape)
 	stateB.addEffect(0, &Effect{
 		nextStateKey: "A",
-		effect:       doEffect3,
+		effect: func(cursor int) (Cursor, WriteVal) {
+			return Cursor(cursor - 1), WriteVal(1)
+		},
 	})
 	stateB.addEffect(1, &Effect{
 		nextStateKey: "A",
-		effect:       doEffect4,
+		effect: func(cursor int) (Cursor, WriteVal) {
+			return Cursor(cursor + 1), WriteVal(1)
+		},
 	})
 
 	tape.addState("A", stateA)
@@ -119,5 +112,5 @@ func main() {
 
 	tape.start(5, "A")
 
-	fmt.Println(tape)
+	//fmt.Println(tape)
 }
