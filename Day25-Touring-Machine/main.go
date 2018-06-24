@@ -51,23 +51,21 @@ func (t *Tape) addState(key string, state *State) {
 
 func (t *Tape) start(steps int, key string) {
 
+	// initialize the cursor somewhere in the middle of the tape....
 	cursor := Cursor(steps * 10 / 2)
-	fmt.Printf("Cursor start value %d and state %s \n", cursor, key)
 
-	iterations := 0
+	var iterations int
 	var writeVal WriteVal
 	var newCursor Cursor
 
 	for iterations < steps {
-
+		//get desired state
 		state := t.states[key]
+		//current tape value, according to which we make a decision
 		currentTapeValue := t.content[cursor]
-
-		//fmt.Printf("State %s, Cursor %d,current value %d, next value %d \n", key, cursor, currentTapeValue, int(writeVal))
+		//get next position of the cursor from the state config according to current value and cursor
 		newCursor, writeVal = state.config[currentTapeValue].effect(cursor)
-
-		//fmt.Printf("State %s, Cursor %d,current value %d, next value %d \n \n\n\n", key, cursor, currentTapeValue, int(writeVal))
-		// assign new value
+		// assign new computed value, replace old value
 		t.content[int(cursor)] = int(writeVal)
 		// get the next state key
 		key = state.config[currentTapeValue].nextStateKey
@@ -250,7 +248,5 @@ func main() {
 	tape.addState("E", stateE)
 	tape.addState("F", stateF)
 
-	tape.start(12794428, "A")
-
-	// 2832 Correct
+	tape.start(12794428, "A") // 2832 Correct
 }
