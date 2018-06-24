@@ -23,9 +23,14 @@ func (s *State) addEffect(val int, effect *Effect) {
 type Cursor int
 type WriteVal int
 
+const (
+	ZERO WriteVal = 0
+	ONE  WriteVal = 1
+)
+
 type Effect struct {
 	nextStateKey string
-	effect       func(cursor int) (Cursor, WriteVal)
+	effect       func(Cursor) (Cursor, WriteVal)
 }
 
 type Tape struct {
@@ -60,7 +65,7 @@ func (t *Tape) start(steps int, startStateKey string) {
 		// call do effect which should modify the tape
 		startStateKey = state.config[currentTapeValue].nextStateKey
 
-		cursor, writeVal = state.config[currentTapeValue].effect(int(cursor))
+		cursor, writeVal = state.config[currentTapeValue].effect(cursor)
 		//fmt.Printf("Current cursor %d with the next value %d \n", cursor, int(writeVal))
 		t.content[int(cursor)] = int(writeVal)
 
@@ -82,28 +87,28 @@ func main() {
 	stateA := NewState(tape)
 	stateA.addEffect(0, &Effect{
 		nextStateKey: "B",
-		effect: func(cursor int) (Cursor, WriteVal) {
-			return Cursor(cursor + 1), WriteVal(1)
+		effect: func(cursor Cursor) (Cursor, WriteVal) {
+			return cursor + 1, ONE
 		},
 	})
 	stateA.addEffect(1, &Effect{
 		nextStateKey: "B",
-		effect: func(cursor int) (Cursor, WriteVal) {
-			return Cursor(cursor - 1), WriteVal(0)
+		effect: func(cursor Cursor) (Cursor, WriteVal) {
+			return cursor - 1, ZERO
 		},
 	})
 	// create and describe stateB
 	stateB := NewState(tape)
 	stateB.addEffect(0, &Effect{
 		nextStateKey: "A",
-		effect: func(cursor int) (Cursor, WriteVal) {
-			return Cursor(cursor - 1), WriteVal(1)
+		effect: func(cursor Cursor) (Cursor, WriteVal) {
+			return cursor - 1, ONE
 		},
 	})
 	stateB.addEffect(1, &Effect{
 		nextStateKey: "A",
-		effect: func(cursor int) (Cursor, WriteVal) {
-			return Cursor(cursor + 1), WriteVal(1)
+		effect: func(cursor Cursor) (Cursor, WriteVal) {
+			return cursor + 1, ONE
 		},
 	})
 
@@ -112,5 +117,4 @@ func main() {
 
 	tape.start(5, "A")
 
-	//fmt.Println(tape)
 }
