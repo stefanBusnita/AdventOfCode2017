@@ -10,7 +10,7 @@ import (
 func main() {
 
 	//particle swarm declaration
-	//swarm := make([]Particle)
+	swarm := make([]*Particle, 0)
 
 	f, err := os.Open("swarmcfg.txt")
 	check(err)
@@ -20,21 +20,28 @@ func main() {
 
 	for scanner.Scan() {
 		row := scanner.Text()
-		processRow(row)
+		particle := processRow(row)
+		swarm = append(swarm, particle)
+	}
+
+	for index, particle := range swarm {
+		fmt.Printf("Currently at particle %d, pos: %+v, vel: %+v, acc:%+v \n", index, particle.Pos, particle.Vel, particle.Acc)
 	}
 
 }
 
-func processRow(row string) {
+func processRow(row string) *Particle {
 
 	particleData := strings.Split(row, ", ")
 
-	pos := getPosition(particleData[0])
-	fmt.Print(pos)
+	posSlice := toStringSlice(particleData[0])
+	velSlice := toStringSlice(particleData[1])
+	accSlice := toStringSlice(particleData[2])
 
+	return NewParticle(posSlice, velSlice, accSlice)
 }
 
-func getPosition(positionData string) []string {
+func toStringSlice(positionData string) []string {
 	s := strings.Index(positionData, "<")
 
 	s += len("<")
