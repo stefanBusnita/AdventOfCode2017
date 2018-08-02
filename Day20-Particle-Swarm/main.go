@@ -21,15 +21,16 @@ func main() {
 	scanner.Split(bufio.ScanLines)
 
 	var particleNo = -1
+	var dups map[string]int = make(map[string]int, 0)
 	for scanner.Scan() {
 		row := scanner.Text()
 		particleNo++
 		particle := getParticleFromRow(particleNo, row)
-		//swarm = append(swarm, particle)
 		swarm.addParticle(particle)
+		dups[particle.String()] = particle.Id
 	}
 
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 1000; i++ {
 		var wg sync.WaitGroup
 		wg.Add(len(swarm))
 
@@ -39,9 +40,30 @@ func main() {
 		}
 		wg.Wait()
 
-	}
+		var removable []int
 
+		for _, particle := range swarm {
+			var occ = 0
+			for _, particle2 := range swarm {
+				if particle2.Id != particle.Id && particle.String() == particle2.String() {
+					occ++
+				}
+			}
+			if occ > 0 {
+				removable = append(removable, particle.Id)
+			}
+		}
+
+		for _, remov := range removable {
+			swarm.removeParticle(remov)
+		}
+
+		//fmt.Printf("At step %d, remove %+v \n", i, removable)
+	}
+	// 144
+	// 477
 	fmt.Printf("Closest is %d", swarm.findClosestToOrigin().Id)
+	fmt.Printf("How many are left are collision %d", len(swarm))
 }
 
 func getParticleFromRow(particleNo int, row string) *Particle {

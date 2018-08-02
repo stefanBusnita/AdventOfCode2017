@@ -20,7 +20,14 @@ func (s Swarm) removeParticle(id int) {
 }
 
 func (s Swarm) findClosestToOrigin() Particle {
-	cp := *s[0]
+
+	var selkey = 0
+	for key, _ := range s {
+		selkey = key
+		break
+	}
+
+	cp := *s[selkey]
 	for _, particle := range s {
 		if particle.Md <= cp.Md {
 			cp = *particle
@@ -35,6 +42,10 @@ type Particle struct {
 	Vel Velocity
 	Acc Acceleration
 	Md  int
+}
+
+func (p *Particle) String() string {
+	return strconv.Itoa(p.Pos.x) + strconv.Itoa(p.Pos.y) + strconv.Itoa(p.Pos.z)
 }
 
 func NewParticle(id int, pos []string, vel []string, acc []string) *Particle {
