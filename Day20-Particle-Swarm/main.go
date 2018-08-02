@@ -3,14 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"strings"
+	"sync"
 )
 
 func main() {
 
 	//particle swarm declaration
-	swarm := make([]*Particle, 0)
+	swarm := NewSwarm()
 
 	f, err := os.Open("swarmcfg.txt")
 	check(err)
@@ -18,19 +20,31 @@ func main() {
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanLines)
 
+	var particleNo = -1
 	for scanner.Scan() {
 		row := scanner.Text()
-		particle := processRow(row)
-		swarm = append(swarm, particle)
+		particleNo++
+		particle := getParticleFromRow(particleNo, row)
+		//swarm = append(swarm, particle)
+		swarm.addParticle(particle)
 	}
 
-	for index, particle := range swarm {
-		fmt.Printf("Currently at particle %d, pos: %+v, vel: %+v, acc:%+v \n", index, particle.Pos, particle.Vel, particle.Acc)
+	for i := 0; i < 10000; i++ {
+		var wg sync.WaitGroup
+		wg.Add(len(swarm))
+
+		//move all particles one step
+		for _, particle := range swarm {
+			go particle.Move(&wg)
+		}
+		wg.Wait()
+
 	}
 
+	fmt.Printf("Closest is %d", swarm.findClosestToOrigin().Id)
 }
 
-func processRow(row string) *Particle {
+func getParticleFromRow(particleNo int, row string) *Particle {
 
 	particleData := strings.Split(row, ", ")
 
@@ -38,12 +52,11 @@ func processRow(row string) *Particle {
 	velSlice := toStringSlice(particleData[1])
 	accSlice := toStringSlice(particleData[2])
 
-	return NewParticle(posSlice, velSlice, accSlice)
+	return NewParticle(particleNo, posSlice, velSlice, accSlice)
 }
 
 func toStringSlice(positionData string) []string {
 	s := strings.Index(positionData, "<")
-
 	s += len("<")
 	e := strings.Index(positionData, ">")
 	return strings.Split(positionData[s:e], ",")
@@ -53,4 +66,10 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
 }

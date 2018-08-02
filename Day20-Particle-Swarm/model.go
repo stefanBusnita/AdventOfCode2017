@@ -2,19 +2,47 @@ package main
 
 import (
 	"strconv"
+	"sync"
 )
 
-type Particle struct {
-	Pos *Position
-	Vel *Velocity
-	Acc *Acceleration
+type Swarm map[int]*Particle
+
+func NewSwarm() Swarm {
+	return make(Swarm, 0)
 }
 
-func NewParticle(pos []string, vel []string, acc []string) *Particle {
+func (s Swarm) addParticle(p *Particle) {
+	s[p.Id] = p
+}
+
+func (s Swarm) removeParticle(id int) {
+	delete(s, id)
+}
+
+func (s Swarm) findClosestToOrigin() Particle {
+	cp := *s[0]
+	for _, particle := range s {
+		if particle.Md <= cp.Md {
+			cp = *particle
+		}
+	}
+	return cp
+}
+
+type Particle struct {
+	Id  int
+	Pos Position
+	Vel Velocity
+	Acc Acceleration
+	Md  int
+}
+
+func NewParticle(id int, pos []string, vel []string, acc []string) *Particle {
 	return &Particle{
-		Pos: newPosition(pos),
-		Vel: newVelocity(vel),
-		Acc: newAcceleration(acc),
+		Id:  id,
+		Pos: *newPosition(pos),
+		Vel: *newVelocity(vel),
+		Acc: *newAcceleration(acc),
 	}
 }
 
@@ -67,7 +95,7 @@ func getCoordData(posData []string) (int, int, int) {
 	return x, y, z
 }
 
-func (p *Particle) Move() {
+func (p *Particle) Move(wg *sync.WaitGroup) {
 	// calculate velocity
 	p.Vel.x += p.Acc.x
 	p.Vel.y += p.Acc.y
@@ -76,8 +104,15 @@ func (p *Particle) Move() {
 	p.Pos.x += p.Vel.x
 	p.Pos.y += p.Vel.y
 	p.Pos.z += p.Vel.z
+
+	p.Md = Abs(p.Pos.x) + Abs(p.Pos.y) + Abs(p.Pos.z)
+
+	wg.Done()
 }
 
-func (Particle) init() {
-
+func Abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
 }
